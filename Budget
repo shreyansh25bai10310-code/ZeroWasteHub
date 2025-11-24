@@ -1,0 +1,54 @@
+# budget_manager.py
+import json
+from pathlib import Path
+from datetime import datetime
+import csv
+
+BFILE = Path("budget.json")
+EXP = Path("expenses.csv")
+
+
+def set_budget():
+    try:
+        amount = float(input("Set your monthly budget: "))
+    except ValueError:
+        print("Invalid amount.")
+        return
+
+    BFILE.write_text(json.dumps({"budget": amount}))
+    print("Budget saved!")
+
+
+def check_budget():
+    if not BFILE.exists():
+        print("Budget not set.")
+        return
+
+    budget = json.loads(BFILE.read_text()).get("budget", None)
+    if budget is None:
+        print("Budget not set.")
+        return
+
+    month = datetime.now().strftime("%Y-%m")
+    total = 0.0
+
+    if not EXP.exists():
+        print("No expenses to compare.")
+        return
+
+    with EXP.open("r", newline="") as f:
+        reader = csv.reader(f)
+        next(reader, None)  # skip header
+        for date, amount, cat, note in reader:
+            if date.startswith(month):
+                total += float(amount)
+
+    print(f"\nTotal Spending This Month: ₹{total:.2f}")
+    print(f"Budget: ₹{budget:.2f}")
+
+    if total > budget:
+        print("⚠️ Budget exceeded!")
+    elif total > 0.9 * budget:
+        print("⚠️ Warning: High spending!")
+    else:
+        print("You are within budget. Good job!")
