@@ -1,0 +1,45 @@
+# expense_manager.py
+import csv
+from datetime import datetime
+from pathlib import Path
+
+FILE = Path("expenses.csv")
+
+
+def ensure_file():
+    if not FILE.exists():
+        with FILE.open("w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["date", "amount", "category", "note"])  # header
+
+
+def add_expense():
+    ensure_file()
+    try:
+        amount = float(input("Enter amount: "))
+    except ValueError:
+        print("Invalid amount. Aborting.")
+        return
+    category = input("Enter category (Food/Travel/Shopping/Fees/Misc): ").strip() or "Misc"
+    note = input("Note (optional): ")
+    date = datetime.now().strftime("%Y-%m-%d")
+
+    with FILE.open("a", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([date, amount, category, note])
+
+    print("Expense added successfully!")
+
+
+def view_expenses():
+    if not FILE.exists():
+        print("No expenses recorded yet.")
+        return
+
+    with FILE.open("r", newline="") as f:
+        reader = csv.reader(f)
+        for i, row in enumerate(reader):
+            if i == 0:
+                print(" | ".join(row))
+            else:
+                print(" | ".join(map(str, row)))
