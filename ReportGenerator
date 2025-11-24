@@ -1,0 +1,46 @@
+# report_generator.py
+import csv
+from datetime import datetime
+from collections import defaultdict
+from pathlib import Path
+from visualizer import save_category_pie
+
+EXP = Path("expenses.csv")
+
+
+def monthly_report():
+    if not EXP.exists():
+        print("No expenses recorded yet.")
+        return
+
+    month = input("Enter month (YYYY-MM) or press Enter for current month: ")
+    if not month:
+        month = datetime.now().strftime("%Y-%m")
+
+    totals = 0.0
+    by_cat = defaultdict(float)
+    entries = []
+
+    with EXP.open("r", newline="") as f:
+        reader = csv.reader(f)
+        next(reader, None)
+        for date, amount, cat, note in reader:
+            if date.startswith(month):
+                amt = float(amount)
+                totals += amt
+                by_cat[cat] += amt
+                entries.append((date, amt, cat, note))
+
+    if totals == 0:
+        print("No expenses found for this month.")
+        return
+
+    print(f"\nReport for {month}")
+    print(f"Total: ₹{totals:.2f}")
+    print("Breakdown by category:")
+    for cat, amt in by_cat.items():
+        print(f"  {cat}: ₹{amt:.2f}")
+
+    # Save visualization
+    save_category_pie(by_cat, month)
+    print("Saved chart to screenshots/")
